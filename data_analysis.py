@@ -1,6 +1,6 @@
 import pandas as pd
 
-# 시리즈
+# Title: 시리즈
 '''
 데이터가 순차적으로 나열된 1차원 배열
 index, value은 일대응 대응 관계
@@ -78,7 +78,7 @@ print(a * b)
 2    12
 '''
 
-# 데이터 프레임
+# Title: 데이터 프레임
 '''
 시리즈 1차원 배열이면 데이터 프레임은 2차원 배열
 
@@ -202,7 +202,7 @@ print(df.iloc[1, 1])
 3
 '''
 
-# 데이터 불러오기 및 저장하기
+# Title: 데이터 불러오기 및 저장하기
 '''
 csv
 read_csv(), to_csv()
@@ -269,7 +269,7 @@ print(data_excel)
 
 data_excel.to_excel('changed_kospi.xlsx')
 
-# 데이터 요약 정보 및 통곗값 살펴보기
+# Title: 데이터 요약 정보 및 통곗값 살펴보기
 
 import seaborn as sns
 
@@ -364,7 +364,7 @@ print(df['fare'].median()) # 중위수
 14.4542
 '''
 
-# 걸측치 처리하기
+# Title: 걸측치 처리하기
 '''
 df.info() 했을 때 Non-Null Count가 나오고 전체 개수에 해당 개수를 빼면 결측치가 나오게 된다.
 '''
@@ -482,7 +482,7 @@ print(df_2[['deck', 'deck_ffill', 'deck_bfill']].head(12))
 11    C          C          C
 '''
 
-# 인덱스 다루기
+# Title: 인덱스 다루기
 
 df = sns.load_dataset('mpg')
 
@@ -534,7 +534,7 @@ print(df.head())
 4             vw pickup  44.0          4          97.0        52.0    2130          24.6          82  europe
 '''
 
-# 필터링
+# Title: 필터링
 '''
 크게 불리언 인덱싱과 isin() 메서드를 사용
 '''
@@ -619,3 +619,543 @@ print(df.loc[filtered_isin, ])
 '''
 
 print(df.loc[filtered_isin, ].sort_values('horsepower', ascending=False))
+
+# Title: 새로운 열 만들기
+
+import numpy as np
+
+df['ratio'] = (df['mpg'] / df['weight']) * 100
+print(df.head())
+'''
+    mpg  cylinders  displacement  horsepower  weight  acceleration  model_year origin                       name     ratio
+0  18.0          8         307.0       130.0    3504          12.0          70    usa  chevrolet chevelle malibu  0.513699
+1  15.0          8         350.0       165.0    3693          11.5          70    usa          buick skylark 320  0.406174
+'''
+
+num = pd.Series([-2, -1, 1, 2])
+print(np.where(num >= 0))
+print(np.where(num >= 0, '양수', '음수'))
+'''
+(array([2, 3]),)
+['음수' '음수' '양수' '양수']
+'''
+
+df['horse_power_div'] = np.where(
+    df['horsepower'] < 100, '100 미만',
+    np.where((df['horsepower'] >= 100) & (df['horsepower'] < 200), '100 이상',
+             np.where(df['horsepower'] >= 200, '200 이상', '기타'))
+)
+print(df)
+'''
+      mpg  cylinders  displacement  horsepower  weight  acceleration  model_year  origin                       name     ratio horse_power_div
+0    18.0          8         307.0       130.0    3504          12.0          70     usa  chevrolet chevelle malibu  0.513699          100 이상
+..    ...        ...           ...         ...     ...           ...         ...     ...                        ...       ...             ...
+397  31.0          4         119.0        82.0    2720          19.4          82     usa                 chevy s-10  1.139706          100 미만
+'''
+
+# Title: 데이터 프레임 합치기
+
+df1 = pd.DataFrame({
+    "A":["A0", "A1"],
+    "B":["B0", "B1"]
+}, index=[0, 1])
+
+df2 = pd.DataFrame({
+    "A":["A2", "A3"],
+    "B":["B2", "B3"]
+}, index=[2, 3])
+
+df3 = pd.DataFrame({
+    "A":["A4", "A5"],
+    "B":["B4", "B5"]
+}, index=[4, 5])
+
+print(pd.concat([df1, df2, df3]))
+'''
+    A   B
+0  A0  B0
+1  A1  B1
+2  A2  B2
+3  A3  B3
+4  A4  B4
+5  A5  B5
+'''
+
+df4 = pd.DataFrame({
+    "A":["A4", "A5"],
+}, index=[1, 3])
+print(pd.concat([df1, df4]))
+'''
+    A    B
+0  A0   B0
+1  A1   B1
+1  A4  NaN
+3  A5  NaN
+'''
+
+print(pd.concat([df1, df4], ignore_index=True)) # 기존 인덱스 무시
+'''
+    A    B
+0  A0   B0
+1  A1   B1
+2  A4  NaN
+3  A5  NaN
+'''
+
+print(pd.concat([df1, df4], axis=1)) # 행이 아닌 열 기준으로 합치기
+'''
+     A    B    A
+0   A0   B0  NaN
+1   A1   B1   A4
+3  NaN  NaN   A5
+'''
+
+print(pd.concat([df1, df4], axis=1, join='inner')) # 행이 아닌 열 기준으로 합치기. NaN 이 있는 행은 제외
+'''
+    A   B   A
+1  A1  B1  A4
+'''
+
+left = pd.DataFrame({
+    "key":["K0", "K1"],
+    "A":["A0", "A1"],
+    "B":["B0", "B1"]
+})
+
+right = pd.DataFrame({
+    "key":["K0", "K2"],
+    "C":["A2", "A3"],
+    "D":["B2", "B3"]
+})
+
+print(pd.merge(left, right, on='key')) # default: inner join
+'''
+  key   A   B   C   D
+0  K0  A0  B0  A2  B2
+'''
+
+print(pd.merge(left, right, on='key', how='left'))
+'''
+  key   A   B    C    D
+0  K0  A0  B0   A2   B2
+1  K1  A1  B1  NaN  NaN
+'''
+
+print(pd.merge(left, right, on='key', how='right'))
+'''
+  key    A    B   C   D
+0  K0   A0   B0  A2  B2
+1  K2  NaN  NaN  A3  B3
+'''
+
+print(pd.merge(left, right, on='key', how='outer'))
+'''
+
+  key    A    B    C    D
+0  K0   A0   B0   A2   B2
+1  K1   A1   B1  NaN  NaN
+2  K2  NaN  NaN   A3   B3
+'''
+
+left = pd.DataFrame({
+    "key_left":["K0", "K1"],
+    "A":["A0", "A1"],
+    "B":["B0", "B1"]
+})
+
+right = pd.DataFrame({
+    "key_right":["K0", "K2"],
+    "C":["A2", "A3"],
+    "D":["B2", "B3"]
+})
+
+print(pd.merge(left, right, left_on='key_left', right_on='key_right', how='left'))
+'''
+  key_left   A   B key_right    C    D
+0       K0  A0  B0        K0   A2   B2
+1       K1  A1  B1       NaN  NaN  NaN
+'''
+
+print(left.merge(right, left_on='key_left', right_on='key_right', how='inner'))
+'''
+  key_left   A   B key_right   C   D
+0       K0  A0  B0        K0  A2  B2
+'''
+
+left = pd.DataFrame({
+    "A":["A0", "A1"],
+    "B":["B0", "B1"]
+})
+
+right = pd.DataFrame({
+    "C":["A2", "A3"],
+    "D":["B2", "B3"]
+})
+
+print(left.join(right)) # 행 인덱스 기준으로 결합
+'''
+    A   B   C   D
+0  A0  B0  A2  B2
+1  A1  B1  A3  B3
+'''
+
+# Title: 데이터 재구조화
+
+df = sns.load_dataset('penguins')
+print(df)
+'''
+    species     island  bill_length_mm  bill_depth_mm  flipper_length_mm  body_mass_g     sex
+0    Adelie  Torgersen            39.1           18.7              181.0       3750.0    Male
+1    Adelie  Torgersen            39.5           17.4              186.0       3800.0  Female
+2    Adelie  Torgersen            40.3           18.0              195.0       3250.0  Female
+3    Adelie  Torgersen             NaN            NaN                NaN          NaN     NaN
+4    Adelie  Torgersen            36.7           19.3              193.0       3450.0  Female
+..      ...        ...             ...            ...                ...          ...     ...
+339  Gentoo     Biscoe             NaN            NaN                NaN          NaN     NaN
+340  Gentoo     Biscoe            46.8           14.3              215.0       4850.0  Female
+341  Gentoo     Biscoe            50.4           15.7              222.0       5750.0    Male
+342  Gentoo     Biscoe            45.2           14.8              212.0       5200.0  Female
+343  Gentoo     Biscoe            49.9           16.1              213.0       5400.0    Male
+
+[344 rows x 7 columns]
+'''
+
+print(df.melt(id_vars=['species', 'island'])) # id_vars 값 기준으로 나머지 열들은 variable에 넣고 value를 나영ㄹ
+'''
+     species     island        variable   value
+0     Adelie  Torgersen  bill_length_mm    39.1
+1     Adelie  Torgersen  bill_length_mm    39.5
+2     Adelie  Torgersen  bill_length_mm    40.3
+3     Adelie  Torgersen  bill_length_mm     NaN
+4     Adelie  Torgersen  bill_length_mm    36.7
+...      ...        ...             ...     ...
+1715  Gentoo     Biscoe             sex     NaN
+1716  Gentoo     Biscoe             sex  Female
+1717  Gentoo     Biscoe             sex    Male
+1718  Gentoo     Biscoe             sex  Female
+1719  Gentoo     Biscoe             sex    Male
+'''
+
+# index: 행 인덱스, columns: 열 인덱스, values: 데이터 값, aggfunc: 데이터 집계 함수
+print(df.pivot_table(
+    index='species',
+    columns='island',
+    values='bill_length_mm',
+    aggfunc='mean'
+))
+'''
+island        Biscoe      Dream  Torgersen
+species
+Adelie     38.975000  38.501786   38.95098
+Chinstrap        NaN  48.833824        NaN
+Gentoo     47.504878        NaN        NaN
+'''
+
+print(df.pivot_table(
+    index=['species', 'sex'],
+    columns='island',
+    values=['bill_length_mm', 'flipper_length_mm'],
+    aggfunc=['mean', 'count']
+))
+'''
+                           mean                                                                          count
+                 bill_length_mm                       flipper_length_mm                         bill_length_mm                 flipper_length_mm
+island                   Biscoe      Dream  Torgersen            Biscoe       Dream   Torgersen         Biscoe Dream Torgersen            Biscoe Dream Torgersen
+species   sex
+Adelie    Female      37.359091  36.911111  37.554167        187.181818  187.851852  188.291667           22.0  27.0      24.0              22.0  27.0      24.0
+          Male        40.590909  40.071429  40.586957        190.409091  191.928571  194.913043           22.0  28.0      23.0              22.0  28.0      23.0
+Chinstrap Female            NaN  46.573529        NaN               NaN  191.735294         NaN            NaN  34.0       NaN               NaN  34.0       NaN
+          Male              NaN  51.094118        NaN               NaN  199.911765         NaN            NaN  34.0       NaN               NaN  34.0       NaN
+Gentoo    Female      45.563793        NaN        NaN        212.706897         NaN         NaN           58.0   NaN       NaN              58.0   NaN       NaN
+          Male        49.473770        NaN        NaN        221.540984         NaN         NaN           61.0   NaN       NaN              61.0   NaN       NaN
+'''
+
+print(df.pivot_table(
+    index=['species', 'sex'],
+    columns='island',
+    values=['bill_length_mm', 'flipper_length_mm'],
+    aggfunc=['mean', 'count']
+).stack())
+'''
+                                     mean                            count
+                           bill_length_mm flipper_length_mm bill_length_mm flipper_length_mm
+species   sex    island
+Adelie    Female Biscoe         37.359091        187.181818           22.0              22.0
+                 Dream          36.911111        187.851852           27.0              27.0
+                 Torgersen      37.554167        188.291667           24.0              24.0
+          Male   Biscoe         40.590909        190.409091           22.0              22.0
+                 Dream          40.071429        191.928571           28.0              28.0
+                 Torgersen      40.586957        194.913043           23.0              23.0
+Chinstrap Female Dream          46.573529        191.735294           34.0              34.0
+          Male   Dream          51.094118        199.911765           34.0              34.0
+Gentoo    Female Biscoe         45.563793        212.706897           58.0              58.0
+          Male   Biscoe         49.473770        221.540984           61.0              61.0
+'''
+
+print(df.pivot_table(
+    index=['species', 'sex'],
+    columns='island',
+    values=['bill_length_mm', 'flipper_length_mm'],
+    aggfunc=['mean', 'count']
+).stack().unstack())
+'''
+                           mean                                                                          count
+                 bill_length_mm                       flipper_length_mm                         bill_length_mm                 flipper_length_mm
+island                   Biscoe      Dream  Torgersen            Biscoe       Dream   Torgersen         Biscoe Dream Torgersen            Biscoe Dream Torgersen
+species   sex
+Adelie    Female      37.359091  36.911111  37.554167        187.181818  187.851852  188.291667           22.0  27.0      24.0              22.0  27.0      24.0
+          Male        40.590909  40.071429  40.586957        190.409091  191.928571  194.913043           22.0  28.0      23.0              22.0  28.0      23.0
+Chinstrap Female            NaN  46.573529        NaN               NaN  191.735294         NaN            NaN  34.0       NaN               NaN  34.0       NaN
+          Male              NaN  51.094118        NaN               NaN  199.911765         NaN            NaN  34.0       NaN               NaN  34.0       NaN
+Gentoo    Female      45.563793        NaN        NaN        212.706897         NaN         NaN           58.0   NaN       NaN              58.0   NaN       NaN
+          Male        49.473770        NaN        NaN        221.540984         NaN         NaN           61.0   NaN       NaN              61.0   NaN       NaN
+'''
+
+# Title: 데이터 프레임에 함수 적용
+
+df = sns.load_dataset('penguins')
+print(df['bill_length_mm'].apply(np.sqrt))
+'''
+0      6.252999
+         ...   
+339         NaN
+343    7.063993
+'''
+
+def mm_to_cm(num):
+    return num / 10
+
+print(df['bill_length_mm'].apply(mm_to_cm))
+'''
+0      3.91
+       ... 
+343    4.99
+'''
+
+def num_null(data):
+    null_vec = pd.isnull(data)
+    null_count = np.sum(null_vec)
+
+    return null_count
+
+print(df.apply(num_null))
+'''
+species               0
+island                0
+bill_length_mm        2
+bill_depth_mm         2
+flipper_length_mm     2
+body_mass_g           2
+sex                  11
+'''
+
+# 그룹 연산하기
+'''
+count 누락 값을 제외한 데이터 수
+size 누락 값을 포함한 데이터 수
+mean 평균
+std 표준편차
+var 분산
+min 최솟값
+max 최댓값
+quantile(q=0.25) 백분위 25%
+quantile(q=0.50) 백분위 50%
+quantile(q=0.75) 백분위 75%
+sum 전체 합
+describe 데이터 수, 평균, 표준편차, 최솟값, 백분위수(25, 50, 75), 최댓값 반환
+first 첫 번째 행 반환
+last 마지막 행 반환
+nth n번째 행 반환
+'''
+
+df_group = df.groupby(['species'])
+
+for key, group in df_group:
+    print(key)
+    print(group.head(2))
+'''
+('Adelie',)
+  species     island  bill_length_mm  bill_depth_mm  flipper_length_mm  body_mass_g     sex
+0  Adelie  Torgersen            39.1           18.7              181.0       3750.0    Male
+1  Adelie  Torgersen            39.5           17.4              186.0       3800.0  Female
+('Chinstrap',)
+       species island  bill_length_mm  bill_depth_mm  flipper_length_mm  body_mass_g     sex
+152  Chinstrap  Dream            46.5           17.9              192.0       3500.0  Female
+153  Chinstrap  Dream            50.0           19.5              196.0       3900.0    Male
+('Gentoo',)
+    species  island  bill_length_mm  bill_depth_mm  flipper_length_mm  body_mass_g     sex
+220  Gentoo  Biscoe            46.1           13.2              211.0       4500.0  Female
+221  Gentoo  Biscoe            50.0           16.3              230.0       5700.0    Male
+'''
+
+df_group = df.groupby(['species', 'sex', 'island'])
+
+print(df_group.mean())
+'''
+                            bill_length_mm  bill_depth_mm  flipper_length_mm  body_mass_g
+species   sex    island                                                                  
+Adelie    Female Biscoe          37.359091      17.704545         187.181818  3369.318182
+                 Dream           36.911111      17.618519         187.851852  3344.444444
+                 Torgersen       37.554167      17.550000         188.291667  3395.833333
+          Male   Biscoe          40.590909      19.036364         190.409091  4050.000000
+                 Dream           40.071429      18.839286         191.928571  4045.535714
+                 Torgersen       40.586957      19.391304         194.913043  4034.782609
+Chinstrap Female Dream           46.573529      17.588235         191.735294  3527.205882
+          Male   Dream           51.094118      19.252941         199.911765  3938.970588
+Gentoo    Female Biscoe          45.563793      14.237931         212.706897  4679.741379
+          Male   Biscoe          49.473770      15.718033         221.540984  5484.836066
+'''
+
+def min_max(x):
+    return x.max() - x.min()
+
+print(df.groupby(['species', 'sex', 'island']).agg(min_max))
+'''
+                            bill_length_mm  bill_depth_mm  flipper_length_mm  body_mass_g
+species   sex    island                                                                  
+Adelie    Female Biscoe                6.0            4.7               27.0       1050.0
+                 Dream                10.1            3.8               24.0        800.0
+                 Torgersen             7.6            3.4               20.0        900.0
+          Male   Biscoe                8.0            3.9               23.0       1225.0
+                 Dream                 7.8            4.2               30.0       1225.0
+                 Torgersen            11.4            3.9               29.0       1375.0
+Chinstrap Female Dream                17.1            3.0               24.0       1450.0
+          Male   Dream                 7.3            3.3               25.0       1550.0
+Gentoo    Female Biscoe                9.6            2.4               19.0       1250.0
+          Male   Biscoe               15.2            3.2               23.0       1550.0
+'''
+
+print(df.groupby(['species', 'sex', 'island']).agg(['max', 'min']))
+print(df.groupby(['species', 'sex', 'island']).agg({'bill_length_mm' : ['max', 'min']}))
+'''
+                           bill_length_mm      
+                                      max   min
+species   sex    island                        
+Adelie    Female Biscoe              40.5  34.5
+                 Dream               42.2  32.1
+                 Torgersen           41.1  33.5
+          Male   Biscoe              45.6  37.6
+                 Dream               44.1  36.3
+                 Torgersen           46.0  34.6
+Chinstrap Female Dream               58.0  40.9
+          Male   Dream               55.8  48.5
+Gentoo    Female Biscoe              50.5  40.9
+          Male   Biscoe              59.6  44.4
+'''
+
+def z_score(x):
+    z = (x - x.mean()) / x.std()
+    return(z) 
+
+print(df.groupby(['species'])['bill_length_mm'].transform(z_score))
+print(df.groupby(['species'])['bill_length_mm'].apply(z_score))
+'''
+0      0.115870
+1      0.266054
+2      0.566421
+3           NaN
+         ...   
+343    0.777168
+Name: bill_length_mm, Length: 344, dtype: float64
+'''
+
+print(df.groupby(['species']).filter(lambda x: x['bill_length_mm'].mean() >= 40))
+'''
+       species  island  bill_length_mm  bill_depth_mm  flipper_length_mm  body_mass_g     sex
+152  Chinstrap   Dream            46.5           17.9              192.0       3500.0  Female
+..         ...     ...             ...            ...                ...          ...     ...
+339     Gentoo  Biscoe             NaN            NaN                NaN          NaN     NaN
+
+[192 rows x 7 columns]
+'''
+
+# 시계열 데이터 다루기
+
+df = sns.load_dataset('taxis')
+print(df)
+'''
+                  pickup             dropoff  passengers  distance  fare   tip  tolls  total   color      payment            pickup_zone                      dropoff_zone pickup_borough dropoff_borough
+0    2019-03-23 20:21:09 2019-03-23 20:27:24           1      1.60   7.0  2.15    0.0  12.95  yellow  credit card        Lenox Hill West               UN/Turtle Bay South      Manhattan       Manhattan
+1    2019-03-04 16:11:55 2019-03-04 16:19:00           1      0.79   5.0  0.00    0.0   9.30  yellow         cash  Upper West Side South             Upper West Side South      Manhattan       Manhattan
+2    2019-03-27 17:53:01 2019-03-27 18:00:25           1      1.37   7.5  2.36    0.0  14.16  yellow  credit card          Alphabet City                      West Village      Manhattan       Manhattan
+3    2019-03-10 01:23:59 2019-03-10 01:49:51           1      7.70  27.0  6.15    0.0  36.95  yellow  credit card              Hudson Sq                    Yorkville West      Manhattan       Manhattan
+4    2019-03-30 13:27:42 2019-03-30 13:37:14           3      2.16   9.0  1.10    0.0  13.40  yellow  credit card           Midtown East                    Yorkville West      Manhattan       Manhattan
+...                  ...                 ...         ...       ...   ...   ...    ...    ...     ...          ...                    ...                               ...            ...             ...
+6428 2019-03-31 09:51:53 2019-03-31 09:55:27           1      0.75   4.5  1.06    0.0   6.36   green  credit card      East Harlem North              Central Harlem North      Manhattan       Manhattan
+6429 2019-03-31 17:38:00 2019-03-31 18:34:23           1     18.74  58.0  0.00    0.0  58.80   green  credit card                Jamaica  East Concourse/Concourse Village         Queens           Bronx
+6430 2019-03-23 22:55:18 2019-03-23 23:14:25           1      4.14  16.0  0.00    0.0  17.30   green         cash    Crown Heights North                    Bushwick North       Brooklyn        Brooklyn
+6431 2019-03-04 10:09:25 2019-03-04 10:14:29           1      1.12   6.0  0.00    0.0   6.80   green  credit card          East New York      East Flatbush/Remsen Village       Brooklyn        Brooklyn
+6432 2019-03-13 19:31:22 2019-03-13 19:48:02           1      3.85  15.0  3.36    0.0  20.16   green  credit card            Boerum Hill                   Windsor Terrace       Brooklyn        Brooklyn
+
+[6433 rows x 14 columns]
+'''
+
+print(df.info())
+'''
+<class 'pandas.core.frame.DataFrame'>
+RangeIndex: 6433 entries, 0 to 6432
+Data columns (total 14 columns):
+ #   Column           Non-Null Count  Dtype         
+---  ------           --------------  -----         
+ 0   pickup           6433 non-null   datetime64[ns]
+ 1   dropoff          6433 non-null   datetime64[ns]
+ 2   passengers       6433 non-null   int64         
+ 3   distance         6433 non-null   float64       
+ 4   fare             6433 non-null   float64       
+ 5   tip              6433 non-null   float64       
+ 6   tolls            6433 non-null   float64       
+ 7   total            6433 non-null   float64       
+ 8   color            6433 non-null   object        
+ 9   payment          6389 non-null   object        
+ 10  pickup_zone      6407 non-null   object        
+ 11  dropoff_zone     6388 non-null   object        
+ 12  pickup_borough   6407 non-null   object        
+ 13  dropoff_borough  6388 non-null   object        
+dtypes: datetime64[ns](2), float64(5), int64(1), object(6)
+memory usage: 703.
+'''
+
+print(df['pickup'].dt.year) # dt 접근자를 이용하면 datetime 타입의 열에 한 번에 접근할 수 있다.
+print(df['pickup'].dt.month)
+print(df['pickup'].dt.day)
+
+# 시간 순으로 데이터 정리
+df.sort_values('pickup', inplace=True)
+df.reset_index(drop=True, inplace=True)
+print(df)
+'''
+                  pickup             dropoff  passengers  distance  fare   tip  tolls  total   color      payment                    pickup_zone                   dropoff_zone pickup_borough dropoff_borough
+0    2019-02-28 23:29:03 2019-02-28 23:32:35           1      0.90   5.0  0.00    0.0   6.30   green         cash                    Old Astoria  Long Island City/Queens Plaza         Queens          Queens
+...                  ...                 ...         ...       ...   ...   ...    ...    ...     ...          ...                            ...                            ...            ...             ...
+6428 2019-03-31 22:13:37 2019-03-31 22:22:50           1      1.00   7.5  0.70    0.0  12.00  yellow  credit card                           SoHo                Lower East Side      Manhattan       Manhattan
+'''
+
+print(df['dropoff'] - df['pickup'])
+'''
+0      0 days 00:03:32
+             ...      
+6428   0 days 00:09:13
+Length: 6433, dtype: timedelta64[ns]
+'''
+
+df.set_index('pickup', inplace=True)
+print(df.loc['2019-02']) # 2019년 2월에 해당하는 정보만 추출
+'''
+                                dropoff  passengers  distance  fare  tip  tolls  total  color payment  pickup_zone                   dropoff_zone pickup_borough dropoff_borough
+pickup                                                                                                                                                                          
+2019-02-28 23:29:03 2019-02-28 23:32:35           1       0.9   5.0  0.0    0.0    6.3  green    cash  Old Astoria  Long Island City/Queens Plaza         Queens          Queens
+'''
+
+# Title: 시계열 데이터 만들기
+
+df = pd.date_range(start='2021-01-01',
+              end='2021-12-31',
+              freq='M') # 간격 D 일, 3D 3일, W 주, H 시간, T 분, S 초, M 월말, MS 월초 등
+
+print(df)
+'''
+DatetimeIndex(['2021-01-31', '2021-02-28', '2021-03-31', '2021-04-30',
+               '2021-05-31', '2021-06-30', '2021-07-31', '2021-08-31',
+               '2021-09-30', '2021-10-31', '2021-11-30', '2021-12-31'],
+              dtype='datetime64[ns]', freq='M')
+'''
